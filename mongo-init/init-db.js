@@ -62,7 +62,15 @@ try {
 console.log('Database initialization completed!');
 console.log('Collections in database:', db.getCollectionNames());
 
-// Collection creation functions
+/**
+ * Create the `users` collection with a JSON Schema validator and a unique sparse email index.
+ *
+ * The collection requires documents to include a `name` (string). Optional fields validated:
+ * - `email`: string matching a basic email regex.
+ * - `createdAt`: BSON Date.
+ *
+ * Also creates a unique, sparse index on `email` to enforce uniqueness only for documents that include an email.
+ */
 function createUsersCollection(db) {
   db.createCollection('users', {
     validator: {
@@ -84,6 +92,17 @@ function createUsersCollection(db) {
   db.users.createIndex({ email: 1 }, { unique: true, sparse: true });
 }
 
+/**
+ * Create the "groups" collection with a JSON Schema validator for group documents.
+ *
+ * The validator requires "name" and "members". Documents may include:
+ * - name: string
+ * - createdBy: ObjectId
+ * - members: non-empty array of objects each requiring "userId" (ObjectId), and optionally "joinedAt" (date) and "isActive" (boolean)
+ * - createdAt: date
+ *
+ * The function performs no return value and assumes `db` is a MongoDB database handle.
+ */
 function createGroupsCollection(db) {
   db.createCollection('groups', {
     validator: {
@@ -113,6 +132,22 @@ function createGroupsCollection(db) {
   });
 }
 
+/**
+ * Create the "receipts" collection with a JSON Schema validator and useful indexes.
+ *
+ * The collection enforces that documents are objects and require: `payerId`, `total`, and `currency`.
+ * Validated fields include:
+ * - payerId, groupId: ObjectId references
+ * - shopName: string
+ * - date, createdAt: date
+ * - total, tax: numbers (minimum 0)
+ * - currency: string (currently restricted to `'THB'`)
+ * - imageUrl: string
+ * - items: array of ObjectId (references to item documents)
+ *
+ * After creating the collection and validator, this function creates indexes on `payerId`
+ * and `groupId` to optimize common queries.
+ */
 function createReceiptsCollection(db) {
   db.createCollection('receipts', {
     validator: {
@@ -145,6 +180,18 @@ function createReceiptsCollection(db) {
   db.receipts.createIndex({ groupId: 1 });
 }
 
+/**
+ * Create the "items" collection with a JSON Schema validator and an index on receiptId.
+ *
+ * The collection requires documents to include `receiptId`, `name`, `price`, and `splits`.
+ * - `receiptId`: ObjectId reference to the parent receipt.
+ * - `name`: string.
+ * - `price`: number >= 0.
+ * - `quantity` (optional): number >= 1.
+ * - `splits`: non-empty array of objects each requiring `userId` (ObjectId) and `share` (number between 0 and 1); `isCustom` may be provided as a boolean.
+ *
+ * Side effects: creates the collection (if not present) with the validator and creates an index on `receiptId`.
+ */
 function createItemsCollection(db) {
   db.createCollection('items', {
     validator: {
