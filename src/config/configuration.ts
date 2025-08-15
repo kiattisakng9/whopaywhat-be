@@ -1,8 +1,10 @@
 export default () => ({
-  port: parseInt(process.env.PORT || '3000', 10),
+  port: parseInt(process.env.PORT || '3001', 10),
   database: {
     uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/whopaywhat',
     name: process.env.MONGODB_DATABASE || 'whopaywhat',
+    username: process.env.MONGODB_USERNAME || 'admin',
+    password: process.env.MONGODB_PASSWORD || 'mongo-admin@123',
   },
   redis: {
     host: process.env.REDIS_HOST || 'localhost',
