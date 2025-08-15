@@ -19,9 +19,9 @@ services:
     restart: unless-stopped
     ports:
       - '6379:6379'
-    command: redis-server --requirepass "redis-admin@123"
+    command: redis-server --requirepass "${REDIS_PASSWORD:-redis-admin@123}"
     environment:
-      REDIS_PASSWORD: redis-admin@123
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis-admin@123}
     volumes:
       - wpw-redis-data:/data
 volumes:
