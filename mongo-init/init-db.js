@@ -19,10 +19,12 @@ try {
   });
   console.log('User created successfully');
 } catch (error) {
-  if (error.code === 51003) {
+  // 51003: UserAlreadyExists (newer MongoDB versions), 11000: DuplicateKey (older versions)
+  if (error && (error.code === 51003 || error.code === 11000)) {
     console.log('User already exists, skipping user creation');
   } else {
-    console.log('Error creating user:', error.message);
+    // Fail fast on unexpected errors so the container doesn't come up misconfigured
+    throw error;
   }
 }
 
