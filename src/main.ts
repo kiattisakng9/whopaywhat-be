@@ -1,8 +1,8 @@
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from '@common/filters/global-exception.filter';
+import { Logger, ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -29,7 +29,7 @@ async function bootstrap() {
       credentials: true,
     });
 
-    const port = configService.get<number>('port') || 3000;
+    const port = configService.get<number>('port') || 3001;
     await app.listen(port);
 
     logger.log(`Application is running on: http://localhost:${port}`);
