@@ -11,15 +11,20 @@ export default () => {
 
   // Build URI with authentication if both credentials are provided
   let mongoUri: string;
+  const baseUri =
+    process.env.MONGODB_URI || 'mongodb://localhost:27017/whopaywhat';
   if (username && password) {
     const encodedUsername = encodeURIComponent(username);
     const encodedPassword = encodeURIComponent(password);
-    mongoUri =
-      process.env.MONGODB_URI ||
-      `mongodb://${encodedUsername}:${encodedPassword}@localhost:27017/whopaywhat`;
+    mongoUri = baseUri.includes('@')
+      ? baseUri
+      : baseUri.replace(
+          /^mongodb(\+srv)?:\/\//,
+          (_m, srv) =>
+            `mongodb${srv ? '+srv' : ''}://${encodedUsername}:${encodedPassword}@`,
+        );
   } else {
-    mongoUri =
-      process.env.MONGODB_URI || 'mongodb://localhost:27017/whopaywhat';
+    mongoUri = baseUri;
   }
 
   return {
