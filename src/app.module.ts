@@ -3,6 +3,7 @@ import { ExceptionModule } from '@common/exceptions/exception.module';
 import { GlobalExceptionFilter } from '@common/filters/global-exception.filter';
 import configuration from '@config/configuration';
 import { RedisModule } from '@database/redis.module';
+import { AuthModule } from '@modules/auth/auth.module';
 import { HealthModule } from '@modules/health/health.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -18,6 +19,7 @@ import { AppService } from './app.service';
     }),
     MongoDBModule,
     RedisModule,
+    AuthModule,
     HealthModule,
     ExceptionModule,
   ],
