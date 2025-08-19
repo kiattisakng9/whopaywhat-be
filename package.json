@@ -9,11 +9,10 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
-    "start:dev": "nest start --watch",
+    "start:dev": "nodemon --watch src --ext ts --ignore node_modules --ignore dist --exec \"nest start\"",
     "start:dev:no-watch": "nest start",
     "start:dev:safe": "NODE_OPTIONS='--max-old-space-size=4096' nest start",
     "start:dev:poll": "nest start --watch --watchOptions.poll=1000",
-    "start:dev:nodemon": "nodemon --watch src --ext ts --ignore node_modules --ignore dist --exec \"nest start\"",
     "start:dev:minimal": "CHOKIDAR_USEPOLLING=true CHOKIDAR_INTERVAL=1000 nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node -r tsconfig-paths/register dist/main",
@@ -36,9 +35,11 @@
     "class-validator": "^0.14.2",
     "ioredis": "^5.7.0",
     "mongoose": "^8.17.1",
+    "nestjs-zod": "^5.0.0",
     "redis": "^5.8.1",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
