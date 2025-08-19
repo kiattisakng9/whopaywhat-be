@@ -1,0 +1,128 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+        
+model UserProfile {
+  id         String   @id @db.Uuid
+  firstName  String?  @map("first_name")
+  lastName   String?  @map("last_name")
+  avatarUrl  String?  @map("avatar_url")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  createdGroups  Group[]       @relation("GroupCreator")
+  groupMembers   GroupMember[]
+  paidReceipts   Receipt[]     @relation("ReceiptPayer")
+
+  @@map("users_profile")
+}
+
+model Group {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  description String?
+  createdBy   String   @map("created_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  // Relations
+  creator     UserProfile   @relation("GroupCreator", fields: [createdBy], references: [id])
+  receipts    Receipt[]
+  members     GroupMember[]
+
+  @@index([createdBy])
+  @@map("groups")
+}
+
+model GroupMember {
+  id      String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  groupId String @map("group_id") @db.Uuid
+  userId  String @map("user_id") @db.Uuid
+  role    String @default("member")
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  // Relations
+  group Group       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  receiptItemAssignments ReceiptItemAssignment[]
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+  @@index([userId])
+  @@map("group_members")
+}
+
+model Receipt {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  groupId     String    @map("group_id") @db.Uuid
+  description String?
+  shopName    String    @map("shop_name")
+  date        DateTime
+  total       Decimal   @db.Decimal(10, 2)
+  tax         Decimal   @db.Decimal(10, 2)
+  paidBy      String    @map("paid_by") @db.Uuid
+  imageUrl    String?   @map("image_url")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  // Relations
+  group       Group         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  payer       UserProfile   @relation("ReceiptPayer", fields: [paidBy], references: [id])
+  items       ReceiptItem[]
+
+  @@index([groupId])
+  @@index([paidBy])
+  @@index([date])
+  @@map("receipts")
+}
+
+model ReceiptItem {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  receiptId   String    @map("receipt_id") @db.Uuid
+  name        String
+  amount      Decimal   @db.Decimal(10, 2)
+  quantity    Int       @default(1)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  
+  // Relations
+  receipt     Receipt   @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  assignments ReceiptItemAssignment[]
+
+  @@index([receiptId])
+  @@map("receipt_items")
+}
+
+model ReceiptItemAssignment {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  receiptItemId String      @map("receipt_item_id") @db.Uuid
+  groupMemberId String      @map("group_member_id") @db.Uuid
+  shareAmount   Decimal     @db.Decimal(10, 2)
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  receiptItem   ReceiptItem @relation(fields: [receiptItemId], references: [id], onDelete: Cascade)
+  groupMember   GroupMember @relation(fields: [groupMemberId], references: [id], onDelete: Cascade)
+
+  @@unique([receiptItemId, groupMemberId])
+  @@index([receiptItemId])
+  @@index([groupMemberId])
+  @@map("receipt_item_assignments")
+}

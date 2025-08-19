@@ -29,11 +29,16 @@ export default () => {
 
   return {
     port: parseInt(process.env.PORT || '3001', 10),
-    database: {
+    mongodb: {
       uri: mongoUri,
       name: process.env.MONGODB_DATABASE || 'whopaywhat',
       username,
       password,
+    },
+    supabase: {
+      url: process.env.SUPABASE_URL || '',
+      key: process.env.SUPABASE_ANON_KEY || '',
+      serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
     },
     redis: {
       host: process.env.REDIS_HOST || 'localhost',

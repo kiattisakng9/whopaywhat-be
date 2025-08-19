@@ -8,10 +8,10 @@ import { MongooseModule } from '@nestjs/mongoose';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
         const uri =
-          configService.get<string>('database.uri') ||
+          configService.get<string>('mongodb.uri') ||
           'mongodb://localhost:27017';
-        const username = configService.get<string>('database.username');
-        const password = configService.get<string>('database.password');
+        const username = configService.get<string>('mongodb.username');
+        const password = configService.get<string>('mongodb.password');
 
         // Only add authentication if both username and password are provided
         const connectionUri =
@@ -26,9 +26,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 
         return {
           uri: connectionUri,
-          dbName: configService.get<string>('database.name'),
-          authSource:
-            configService.get<string>('database.name') || 'whopaywhat',
+          dbName: configService.get<string>('mongodb.name'),
+          authSource: configService.get<string>('mongodb.name') || 'whopaywhat',
           retryWrites: true,
           w: 'majority',
         };
@@ -38,4 +37,4 @@ import { MongooseModule } from '@nestjs/mongoose';
   ],
   exports: [MongooseModule],
 })
-export class DatabaseModule {}
+export class MongoDBModule {}

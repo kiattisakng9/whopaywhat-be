@@ -1,3 +1,4 @@
+import { SUPABASE_CLIENT } from '@/database/supabase.module';
 import {
   DatabaseConnectionException,
   HealthCheckException,
@@ -6,6 +7,7 @@ import {
 import { REDIS_CLIENT } from '@database/redis.module';
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
+import { SupabaseClient } from '@supabase/supabase-js';
 import Redis from 'ioredis';
 import { Connection, ConnectionStates } from 'mongoose';
 
@@ -13,8 +15,9 @@ export interface HealthCheckResponse {
   status: string;
   timestamp: string;
   uptime: number;
-  database: string;
+  mongodb: string;
   redis: string;
+  supabase: string;
 }
 
 @Injectable()
@@ -22,6 +25,7 @@ export class HealthService {
   constructor(
     @InjectConnection() private readonly mongoConnection: Connection,
     @Inject(REDIS_CLIENT) private readonly redisClient: Redis,
+    @Inject(SUPABASE_CLIENT) private readonly supabaseClient: SupabaseClient,
   ) {}
 
   async checkHealth(): Promise<HealthCheckResponse> {
@@ -56,8 +60,21 @@ export class HealthService {
       throw new RedisConnectionException('Redis connection check failed');
     }
 
+    // Check supabase connection
+    let supabaseStatus = 'disconnected';
+    try {
+      await this.supabaseClient.auth.getUser();
+      supabaseStatus = 'connected';
+    } catch {
+      supabaseStatus = 'error';
+      throw new HealthCheckException('Supabase connection check failed');
+    }
+
+    // Check overall status
     const overallStatus =
-      databaseStatus === 'connected' && redisStatus === 'connected'
+      databaseStatus === 'connected' &&
+      redisStatus === 'connected' &&
+      supabaseStatus === 'connected'
         ? 'healthy'
         : 'unhealthy';
 
@@ -69,8 +86,9 @@ export class HealthService {
       status: overallStatus,
       timestamp,
       uptime,
-      database: databaseStatus,
+      mongodb: databaseStatus,
       redis: redisStatus,
+      supabase: supabaseStatus,
     };
   }
 }
