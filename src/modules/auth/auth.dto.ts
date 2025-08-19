@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 // Zod schemas
 export const SignUpSchema = z.object({
-  email: z.email('Invalid email format'),
+  email: z.email({ message: 'Invalid email format' }),
   password: z
     .string()
     .min(8, 'Password must be at least 8 characters long')
@@ -23,14 +23,20 @@ export const SignUpSchema = z.object({
 });
 
 export const SignInSchema = z.object({
-  email: z.email('Invalid email format'),
+  email: z.email({ message: 'Invalid email format' }),
   password: z.string().min(1, 'Password is required'),
+});
+
+export const RefreshTokenSchema = z.object({
+  refresh_token: z.string().min(1, 'Refresh token is required'),
 });
 
 // DTOs using nestjs-zod
 export class SignUpDto extends createZodDto(SignUpSchema) {}
 export class SignInDto extends createZodDto(SignInSchema) {}
+export class RefreshTokenDto extends createZodDto(RefreshTokenSchema) {}
 
 // Type exports for use in services
 export type SignUpType = z.infer<typeof SignUpSchema>;
 export type SignInType = z.infer<typeof SignInSchema>;
+export type RefreshTokenType = z.infer<typeof RefreshTokenSchema>;

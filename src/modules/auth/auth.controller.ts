@@ -7,7 +7,7 @@ import {
   Logger,
   Post,
 } from '@nestjs/common';
-import { SignInDto, SignUpDto } from './auth.dto';
+import { RefreshTokenDto, SignInDto, SignUpDto } from './auth.dto';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -41,8 +41,10 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  async refreshToken(@Body('refresh_token') refreshToken: string) {
-    const result = await this.authService.refreshToken(refreshToken);
+  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
+    const result = await this.authService.refreshToken(
+      refreshTokenDto.refresh_token,
+    );
     return ResponseUtil.success(result.data, 'Token refreshed successfully');
   }
 }
