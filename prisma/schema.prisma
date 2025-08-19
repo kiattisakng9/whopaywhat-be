@@ -17,6 +17,7 @@ datasource db {
         
 model UserProfile {
   id         String   @id @db.Uuid
+  email      String   @unique @map("email")
   firstName  String?  @map("first_name")
   lastName   String?  @map("last_name")
   avatarUrl  String?  @map("avatar_url")

@@ -1,4 +1,6 @@
 import { MongoDBModule } from '@/database/mongodb.module';
+import { PrismaModule } from '@/database/prisma.module';
+import { SupabaseModule } from '@/database/supabase.module';
 import { ExceptionModule } from '@common/exceptions/exception.module';
 import { GlobalExceptionFilter } from '@common/filters/global-exception.filter';
 import configuration from '@config/configuration';
@@ -18,6 +20,8 @@ import { AppService } from './app.service';
       load: [configuration],
     }),
     MongoDBModule,
+    PrismaModule,
+    SupabaseModule,
     RedisModule,
     AuthModule,
     HealthModule,

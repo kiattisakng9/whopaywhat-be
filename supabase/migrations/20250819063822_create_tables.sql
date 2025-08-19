@@ -1,6 +1,7 @@
 -- CreateTable
 CREATE TABLE "public"."users_profile" (
     "id" UUID NOT NULL,
+    "email" TEXT NOT NULL,
     "first_name" TEXT,
     "last_name" TEXT,
     "avatar_url" TEXT,

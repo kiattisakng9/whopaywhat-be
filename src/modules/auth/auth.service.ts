@@ -1,28 +1,30 @@
-import { SUPABASE_CLIENT } from '@/database/supabase.module';
+import { PrismaService } from '@/database/prisma.service';
+import { SupabaseService } from '@/database/supabase.service';
 import {
   BadRequestException,
-  Inject,
   Injectable,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { PrismaService } from '@/database/prisma.service';
 import {
+  AuthApiError,
   AuthResponse,
   AuthTokenResponsePassword,
   SignInWithPasswordCredentials,
   SignUpWithPasswordCredentials,
-  SupabaseClient,
 } from '@supabase/supabase-js';
-import { SignInDto, SignUpDto } from './dto/auth.dto';
+import { SignInDto, SignUpDto } from './auth.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject(SUPABASE_CLIENT)
-    private readonly supabaseClient: SupabaseClient,
+    private readonly supabaseService: SupabaseService,
     private readonly prismaService: PrismaService,
-  ) {}
+    private readonly logger: Logger,
+  ) {
+    this.logger = new Logger(AuthService.name);
+  }
 
   /**
    * Sign up with email and password
@@ -37,6 +39,7 @@ export class AuthService {
     lastName,
     avatarUrl,
   }: SignUpDto): Promise<AuthResponse> {
+    this.logger.log('Sign up request received: ', email);
     if (!email || !password || !firstName || !lastName) {
       throw new BadRequestException(
         'Email, password, firstName, and lastName are required',
@@ -55,16 +58,35 @@ export class AuthService {
         },
       },
     };
-    const { data, error } = await this.supabaseClient.auth.signUp(credentials);
 
-    if (error) {
-      console.error(error);
+    this.logger.log('Sign up request sent to Supabase');
+    const { data, error } = await this.supabaseService
+      .getClient()
+      .auth.signUp(credentials);
+
+    if (error instanceof AuthApiError) {
+      this.logger.error(error);
       throw new BadRequestException(error.message);
     }
-    if (!data.user) {
-      console.error(error);
-      throw new NotFoundException('User not found');
+    if (error) {
+      this.logger.error(error);
+      throw new BadRequestException('Sign up failed');
     }
+    if (!data.user) {
+      this.logger.error(error);
+      throw new NotFoundException('User not created');
+    }
+
+    await this.prismaService.userProfile.create({
+      data: {
+        id: data.user.id,
+        email,
+        firstName,
+        lastName,
+        avatarUrl,
+      },
+    });
+    this.logger.log('User created: ', data.user.id);
 
     return { data, error: null };
   }
@@ -79,19 +101,28 @@ export class AuthService {
     email,
     password,
   }: SignInDto): Promise<AuthTokenResponsePassword> {
+    this.logger.log('Sign in request received: ', email);
     const credentials: SignInWithPasswordCredentials = {
       email,
       password,
     };
 
+    this.logger.log('Sign in request sent to Supabase');
     const { data, error }: AuthTokenResponsePassword =
-      await this.supabaseClient.auth.signInWithPassword(credentials);
+      await this.supabaseService
+        .getClient()
+        .auth.signInWithPassword(credentials);
 
+    if (error instanceof AuthApiError) {
+      this.logger.error(error);
+      throw new BadRequestException(error.message);
+    }
     if (error) {
-      console.error(error);
-      throw new UnauthorizedException(error.message);
+      this.logger.error(error);
+      throw new UnauthorizedException('Invalid email or password');
     }
 
+    this.logger.log('Sign in success: ', data.user.id);
     return { data, error };
   }
 
@@ -100,11 +131,36 @@ export class AuthService {
    * @returns {Promise<void>} Sign out success
    */
   async signOut(): Promise<void> {
-    const { error } = await this.supabaseClient.auth.signOut();
+    this.logger.log('Sign out request received');
+    const { error } = await this.supabaseService.getClient().auth.signOut();
 
     if (error) {
-      console.error(error);
-      throw new BadRequestException(error.message);
+      this.logger.error(error);
+      throw new BadRequestException('Sign out failed');
     }
+    this.logger.log('Sign out success');
+  }
+
+  /**
+   * Refresh token
+   * @param refreshToken Refresh token
+   * @returns New access token and refresh token
+   * @throws {BadRequestException} If refresh token is invalid
+   */
+  async refreshToken(refreshToken: string): Promise<AuthResponse> {
+    this.logger.log('Refresh token request received: ', refreshToken);
+    this.logger.log('Refresh token request sent to Supabase');
+    const { data, error } = await this.supabaseService
+      .getClient()
+      .auth.refreshSession({
+        refresh_token: refreshToken,
+      });
+
+    if (error) {
+      this.logger.error(error);
+      throw new BadRequestException('Invalid refresh token');
+    }
+    this.logger.log('Refresh token success: ', data.session?.access_token);
+    return { data, error };
   }
 }
