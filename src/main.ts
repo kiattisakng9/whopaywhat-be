@@ -1,12 +1,13 @@
 import { GlobalExceptionFilter } from '@common/filters/global-exception.filter';
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import { ZodValidationPipe } from 'nestjs-zod';
 import { AppModule } from './app.module';
 
-async function bootstrap() {
-  const logger = new Logger('Bootstrap');
+const logger = new Logger('Bootstrap');
 
+async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule);
     const configService = app.get(ConfigService);
@@ -14,14 +15,8 @@ async function bootstrap() {
     // Enable global exception filter
     app.useGlobalFilters(new GlobalExceptionFilter());
 
-    // Enable validation globally
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
+    // Enable Zod validation globally
+    app.useGlobalPipes(new ZodValidationPipe());
 
     // Enable CORS
     app.enableCors({
@@ -39,4 +34,11 @@ async function bootstrap() {
   }
 }
 
-bootstrap();
+bootstrap()
+  .then(() => {
+    logger.log('Application started successfully');
+  })
+  .catch((error) => {
+    logger.error('Error starting application:', error);
+    process.exit(1);
+  });
