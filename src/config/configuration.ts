@@ -29,7 +29,7 @@ export default () => {
 
   return {
     port: parseInt(process.env.PORT || '3001', 10),
-    database: {
+    mongodb: {
       uri: mongoUri,
       name: process.env.MONGODB_DATABASE || 'whopaywhat',
       username,
