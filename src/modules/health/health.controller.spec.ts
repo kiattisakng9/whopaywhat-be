@@ -33,8 +33,9 @@ describe('HealthController', () => {
         status: 'healthy',
         timestamp: '2023-01-01T00:00:00.000Z',
         uptime: 100,
-        database: 'connected',
+        mongodb: 'connected',
         redis: 'connected',
+        supabase: 'connected',
       };
 
       mockHealthService.checkHealth.mockResolvedValue(mockHealthData);
