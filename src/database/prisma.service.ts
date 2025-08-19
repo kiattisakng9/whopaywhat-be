@@ -20,8 +20,15 @@ export class PrismaService
   }
 
   enableShutdownHooks(app: INestApplication): void {
-    this.$on('beforeExit', async () => {
-      await app.close();
+    process.on('beforeExit', () => {
+      app
+        .close()
+        .then(() => {
+          console.log('Prisma client disconnected');
+        })
+        .catch((err) => {
+          console.error('Error closing application', err);
+        });
     });
   }
 }
